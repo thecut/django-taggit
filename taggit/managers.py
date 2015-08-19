@@ -307,6 +307,13 @@ class TaggableManager(RelatedField, Field):
         return False
 
     def post_through_setup(self, cls):
+        # Nasty hack, as related names were clashing (and related_name string
+        # from TaggableManager not being parsed correctly). We override related
+        # name here to pass validation so south migrations can be generated
+        # before switching to django migrations. Don't actually use this in
+        # producion!
+        self.rel.related_name = '{0}_{1}_tags+'.format(cls._meta.app_label,
+                                                       cls._meta.model_name)
         self.related = RelatedObject(cls, self.model, self)
         self.use_gfk = (
             self.through is None or issubclass(self.through, GenericTaggedItemBase)
